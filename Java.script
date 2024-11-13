@@ -1,0 +1,105 @@
+class Eigendom {
+    constructor(naam, prijs, huur, type) {
+        this.naam = naam;
+        this.prijs = prijs;
+        this.huur = huur;
+        this.type = type; // 'straat', 'station', 'nutsbedrijf'
+        this.eigenaar = null;
+        this.huisjes = 0;
+    }
+
+    huurBetalen() {
+        if (this.type === 'straat') {
+            return this.huur + (this.huisjes * 50); // Huur + extra voor huizen
+        } else if (this.type === 'station') {
+            return 25 * (this.huisjes + 1); // Huur afhankelijk van het aantal stations
+        } else if (this.type === 'nutsbedrijf') {
+            return Math.floor(Math.random() * 6 + 1) * 10; // Huur afhankelijk van de dobbelsteen
+        }
+    }
+}
+
+class Speler {
+    constructor(naam) {
+        this.naam = naam;
+        this.saldo = 1500;
+        this.positie = 0;
+        this.eigendommen = [];
+    }
+
+    dobbelsteenGooi() {
+        return Math.floor(Math.random() * 6) + 1 + Math.floor(Math.random() * 6) + 1;
+    }
+
+    koopEigendom(eigendom) {
+        if (this.saldo >= eigendom.prijs) {
+            this.saldo -= eigendom.prijs;
+            eigendom.eigenaar = this;
+            this.eigendommen.push(eigendom);
+            console.log(`${this.naam} heeft ${eigendom.naam} gekocht voor ${eigendom.prijs} euro.`);
+        } else {
+            console.log(`${this.naam} kan ${eigendom.naam} niet kopen omdat hij/zij niet genoeg geld heeft.`);
+        }
+    }
+
+    betaalHuur(huur) {
+        this.saldo -= huur;
+        if (this.saldo < 0) {
+            console.log(`${this.naam} is failliet!`);
+        }
+    }
+}
+
+class Spel {
+    constructor() {
+        this.spelers = [];
+        this.eigendommen = [
+            new Eigendom("Start", 0, 0, "straat"),
+            new Eigendom("Bovenstraat", 50, 10, "straat"),
+            new Eigendom("Havenstraat", 50, 10, "straat"),
+            new Eigendom("Station", 100, 0, "station"),
+            new Eigendom("Kruisstraat", 75, 15, "straat"),
+            new Eigendom("Zeeweg", 100, 20, "straat"),
+            new Eigendom("Park", 150, 30, "straat"),
+            new Eigendom("Eindstraat", 200, 40, "straat"),
+            new Eigendom("Energiebedrijf", 150, 0, "nutsbedrijf"),
+        ];
+    }
+
+    voegSpelerToe(naam) {
+        this.spelers.push(new Speler(naam));
+    }
+
+    speel() {
+        let huidigeSpelerIndex = 0;
+        while (true) {
+            const speler = this.spelers[huidigeSpelerIndex];
+            input(`Druk op Enter om te gooien, ${speler.naam}.`);
+            const worp = speler.dobbelsteenGooi();
+            console.log(`${speler.naam} gooit een ${worp}!`);
+            speler.positie = (speler.positie + worp) % this.eigendommen.length;
+            const eigendom = this.eigendommen[speler.positie];
+            console.log(`${speler.naam} is nu op ${eigendom.naam}.`);
+
+            if (eigendom.naam !== "Start") {
+                if (eigendom.eigenaar === null) {
+                    const koop = prompt(`${speler.naam}, wil je ${eigendom.naam} kopen voor ${eigendom.prijs} euro? (ja/nee)`);
+                    if (koop.toLowerCase() === "ja") {
+                        speler.koopEigendom(eigendom);
+                    } else {
+                        console.log(`${eigendom.naam} wordt geveild.`);
+                        // Veiling logica kan hier worden toegevoegd
+                    }
+                } else {
+                    const huur = eigendom.huurBetalen();
+                    console.log(`${speler.naam} moet ${huur} euro huur betalen voor ${eigendom.naam}.`);
+                    speler.betaalHuur(huur);
+                }
+            }
+
+            huidigeSpelerIndex = (huidigeSpelerIndex + 1) % this.spelers.length;
+        }
+    }
+}
+
+//
